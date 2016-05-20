@@ -13,7 +13,7 @@ var defaultExtensions = {
 };
 var defaultProcessContent = function(content) {
   return content;
-}
+};
 
 var MARKER = "// hbsfy compiled Handlebars template\n";
 
@@ -25,7 +25,7 @@ function findPartials(tree) {
     // handlebars 3,4
     if (node.type === 'PartialStatement' && !inlinePartials[node.name.original]) {
       partials.push(node.name.original);
-      return
+      return;
     }
     // handlebars 2
     if (node.type === 'partial') {
@@ -49,7 +49,7 @@ function hbTraverse(node, action) {
     action(node);
     return Object.keys(node).forEach(function(k) {
       hbTraverse(node[k], action);
-    })
+    });
   }
 }
 
@@ -79,6 +79,7 @@ function getOptions(opts) {
   var precompiler = defaultPrecompiler;
   var traverse = defaultTraverse;
   var processContent = defaultProcessContent;
+  var partialsDir = '';
 
   opts = opts || {};
 
@@ -97,6 +98,12 @@ function getOptions(opts) {
 
     if (opts.t || opts.traverse) {
       traverse = opts.t || opts.traverse;
+      if (opts.partialsDir) {
+        partialsDir = opts.partialsDir;
+      }
+      if (opts.partialsExtension) {
+        partialsExtension = opts.partialsExtension;
+      }
     }
 
     if (opts.pc || opts.processContent) {
@@ -109,7 +116,9 @@ function getOptions(opts) {
     precompiler: precompiler,
     compiler: compiler,
     traverse: traverse,
-    processContent: processContent
+    processContent: processContent,
+    partialsDir: partialsDir,
+    partialsExtension: partialsExtension
   });
 }
 
@@ -142,7 +151,8 @@ function compile(file, opts) {
   if (partials && partials.length) {
     partials.forEach(function(p, i) {
       var ident = "partial$" + i;
-      compiled += "var " + ident + " = require('" + p + "');\n";
+      var file = options.partialsDir + p + options.partialsExtension;
+      compiled += "var " + ident + " = require('" + file + "');\n";
       compiled += "HandlebarsCompiler.registerPartial('" + p + "', " + ident + ");\n";
     });
   }
